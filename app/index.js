@@ -172,7 +172,7 @@ function FindDublicates(path, logs, gatherFiles) {
                                     let dublicateExists = hashMap.has(hashedData);
                                     let hashArray = dublicateExists && hashMap.get(hashedData) || [];
                                     if (dublicateExists) {
-                                        hashArray.push(hashedData);
+                                        hashArray.push(filePath);
                                         hashMap.set(hashedData, hashArray);
                                         res({ status: "dublicate", path: filePath });
                                         return;
@@ -244,10 +244,50 @@ function FindDublicates(path, logs, gatherFiles) {
             yield Wait(0.1);
         }
         if (gatherFiles) { // Gather files
+            console.log("Sorry, the feature to gather all clones hasn't been implemented yet ;(");
         }
         else { // Display files
+            clear();
+            Print(`Do you want to deal with the ?!${hashMap.size}!? dublicates found? [Y/N]`);
+            let answer = (yield RequestUser("")).toString().toLowerCase();
+            let handleFilesNow = answer == "y" || answer == "ye" || answer == "yes";
+            if (!handleFilesNow) {
+                return;
+            }
+            let hashArray = Array.from(hashMap);
+            for (const index in hashArray) {
+                function recurse() {
+                    return __awaiter(this, void 0, void 0, function* () {
+                        clear();
+                        Print(`Handling file #${Number.parseInt(index) + 1}/${hashArray.length}`);
+                        let object = hashArray[index];
+                        let key = object[0];
+                        let files = object[1];
+                        Print(`Dublicates for ?!${key}!?`);
+                        for (const index in files) {
+                            Print(` ${index} - ${files[index]}`);
+                        }
+                        let answer = (yield RequestUser(`\nSelect the files to be spared (Seperate with a comma ",")`)).toString().split(",");
+                        let hasOnlyNumber = true;
+                        for (const index in answer) {
+                            if (Number.isNaN(Number.parseInt(answer[index]))) {
+                                hasOnlyNumber = false;
+                                break;
+                            }
+                        }
+                        if (answer[0] == "" || !hasOnlyNumber) {
+                            clear();
+                            Print("An error was noticed with one of your IDs, please try again!");
+                            yield Wait(1.5);
+                            return yield recurse();
+                        }
+                    });
+                }
+                yield recurse();
+            }
+            yield Wait(20);
         }
-        return controller;
+        return;
     });
 }
 function ShowMenu() {
