@@ -39,16 +39,17 @@ const readLine = __importStar(require("readline"));
 const fs_1 = __importDefault(require("fs"));
 const crypto_1 = require("crypto");
 const childProcess = __importStar(require("child_process"));
-const LOG_FILE_PATH = `${__dirname}\\Logs\\`;
+const LOG_FOLDER_PATH = `${__dirname}\\Logs\\`;
+const GATHER_FOLDER_PATH = `${__dirname}\\Gathered`;
 class WrittenLogs {
     constructor(Name) {
         this.Ready = false;
         let DateObject = new Date();
         this.Name = Name || `${DateObject.getFullYear()}_${DateObject.getDate()}_${DateObject.getMonth()}-${DateObject.getTime()}`;
-        this.Path = `${LOG_FILE_PATH}\\${this.Name}.txt`;
+        this.Path = `${LOG_FOLDER_PATH}\\${this.Name}.txt`;
         // Check if the folder exists
-        if (!fs_1.default.existsSync(LOG_FILE_PATH)) {
-            fs_1.default.mkdirSync(LOG_FILE_PATH);
+        if (!fs_1.default.existsSync(LOG_FOLDER_PATH)) {
+            fs_1.default.mkdirSync(LOG_FOLDER_PATH);
         }
         let exists = fs_1.default.existsSync(this.Path);
         if (!exists) {
@@ -172,6 +173,10 @@ function FindDublicates(path, logs, gatherFiles) {
                                     let hashedData = hash.digest("hex");
                                     let dublicateExists = hashMap.has(hashedData);
                                     let hashArray = dublicateExists && hashMap.get(hashedData) || [];
+                                    if (hashArray.find(path => path == filePath)) {
+                                        res({ status: "none", path: filePath });
+                                        return;
+                                    }
                                     if (dublicateExists) {
                                         hashArray.push(filePath);
                                         hashMap.set(hashedData, hashArray);
@@ -249,18 +254,37 @@ function FindDublicates(path, logs, gatherFiles) {
         }
         else { // Display files
             clear();
-            Print(`Do you want to deal with the ?!${hashMap.size}!? dublicates found? [Y/N]`);
+            // Start moving files
+            let hashArray = Array.from(hashMap);
+            let skipHashIndexes = new Map();
+            // Remove non-dublicates from hashArray
+            for (const index in hashArray) {
+                if (hashArray[index][1].length > 1) {
+                    continue;
+                }
+                skipHashIndexes.set(index, true);
+            }
+            // If there are no dublicates, return
+            if (skipHashIndexes.size >= hashArray.length) {
+                Print(`No dublicates were found, returning...`);
+                return;
+            }
+            Print(`Do you want to deal with the ?!${hashMap.size - skipHashIndexes.size}!? dublicates found? [Y/N]`);
             let answer = (yield RequestUser("")).toString().toLowerCase();
             let handleFilesNow = answer == "y" || answer == "ye" || answer == "yes";
             if (!handleFilesNow) {
                 return;
             }
-            let hashArray = Array.from(hashMap);
+            let filesHandled = 0;
             for (const index in hashArray) {
+                if (skipHashIndexes.has(index)) {
+                    continue;
+                }
                 function recurse() {
                     return __awaiter(this, void 0, void 0, function* () {
+                        filesHandled++;
                         clear();
-                        Print(`Handling file #${Number.parseInt(index) + 1}/${hashArray.length}`);
+                        Print(`Handling file #${filesHandled}/${hashArray.length - skipHashIndexes.size}`);
                         let object = hashArray[index];
                         let key = object[0];
                         let files = object[1];
@@ -269,25 +293,62 @@ function FindDublicates(path, logs, gatherFiles) {
                             Print(` ${index} - ${files[index]}`);
                         }
                         let answer = (yield RequestUser(`\nSelect the files to be spared (Seperate with a comma ",")`)).toString().split(",");
+                        let translatedAnswer = new Map();
                         let hasOnlyNumber = true;
-                        for (const index in answer) {
-                            if (Number.isNaN(Number.parseInt(answer[index]))) {
-                                hasOnlyNumber = false;
-                                break;
+                        if (answer[0] != "") {
+                            for (const index in answer) {
+                                let numberValue = Number.parseInt(answer[index]);
+                                if (Number.isNaN(numberValue)) {
+                                    hasOnlyNumber = false;
+                                    break;
+                                }
+                                translatedAnswer.set(numberValue, true);
                             }
                         }
-                        if (answer[0] == "" || !hasOnlyNumber) {
+                        if (!hasOnlyNumber) {
                             clear();
                             Print("An error was noticed with one of your IDs, please try again!");
                             yield Wait(1.5);
                             return yield recurse();
                         }
+                        for (const i in object[1]) {
+                            if (translatedAnswer.has(Number.parseInt(i))) {
+                                continue;
+                            }
+                            let filePath = object[1][i];
+                            let splitPath = filePath.split(filePath.includes("/") && "/" || "\\");
+                            let nameSplit = splitPath[splitPath.length - 1].split(".");
+                            let fileName = nameSplit[0];
+                            let fileType = nameSplit[1];
+                            function Recurse(lastInt) {
+                                return __awaiter(this, void 0, void 0, function* () {
+                                    let newPath = `${GATHER_FOLDER_PATH}\\${fileName}${lastInt && `_${lastInt}` || ""}.${fileType}`;
+                                    if (fs_1.default.existsSync(newPath)) {
+                                        return Recurse(lastInt && lastInt + 1 || 1);
+                                    }
+                                    return newPath;
+                                });
+                            }
+                            // Remove from hashMap
+                            let currentPaths = hashMap.get(key);
+                            if (currentPaths) {
+                                let pathIndex = currentPaths.findIndex(path => path == filePath);
+                                if (pathIndex) {
+                                    currentPaths.splice(pathIndex, 1);
+                                }
+                            }
+                            // Rename file
+                            let newPath = yield Recurse();
+                            fs_1.default.renameSync(filePath, newPath);
+                            return;
+                        }
                     });
                 }
                 yield recurse();
             }
-            yield Wait(20);
         }
+        clear();
+        Print("All files have been processed, returning...");
         return;
     });
 }
@@ -313,7 +374,7 @@ function ShowMenu() {
         }
         else if (answer == 2) { // View logfiles
             logs.Append("Opened log folder");
-            childProcess.exec(`start "" "${LOG_FILE_PATH}"`);
+            childProcess.exec(`start "" "${LOG_FOLDER_PATH}"`);
         }
         else if (answer == 3) {
             logs.Append("Interface shutdown requested");
@@ -362,6 +423,10 @@ function QueueHandlerLoop() {
     });
 }
 QueueHandlerLoop();
+// If no gather folder, make one
+if (!fs_1.default.existsSync(GATHER_FOLDER_PATH)) {
+    fs_1.default.mkdirSync(GATHER_FOLDER_PATH);
+}
 function RunLoop() {
     return __awaiter(this, void 0, void 0, function* () {
         while (!exitPlease) {
