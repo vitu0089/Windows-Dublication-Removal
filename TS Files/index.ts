@@ -361,7 +361,8 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
     }
 
     clear()
-    Print("All files have been processed, returning...")
+    childProcess.exec(`start "" "${GATHER_FOLDER_PATH}"`)
+    Print("All files have been processed. Opening Gather folder and returning to menu...")
 
     return
 }
