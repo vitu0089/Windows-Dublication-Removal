@@ -1,6 +1,7 @@
 import * as readLine from "readline"
 import fs from "fs"
 import { createHash } from "crypto"
+import * as childProcess from "child_process"
 
 type ControllerType = {
     on: (event: FindDublicatesEventNames, callback: FindDublicatesCallback) => void;
@@ -253,7 +254,7 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
 
         let hashArray = Array.from(hashMap)
         for (const index in hashArray) {
-            async function recurse() {
+            async function recurse() : Promise<void> {
                 clear()
                 Print(`Handling file #${Number.parseInt(index) + 1}/${hashArray.length}`)
                 let object = hashArray[index]
@@ -315,7 +316,8 @@ async function ShowMenu() {
         Print("Searching...")
         await FindDublicates(clearPath,logs,gatherFiles)
     } else if (answer == 2) { // View logfiles
-        Print("Sad ?!:(!?")
+        logs.Append("Opened log folder")
+        childProcess.exec(`start "" "${LOG_FILE_PATH}"`)
     } else if (answer == 3) {
         logs.Append("Interface shutdown requested")
         exitPlease = true

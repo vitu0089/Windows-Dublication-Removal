@@ -38,6 +38,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const readLine = __importStar(require("readline"));
 const fs_1 = __importDefault(require("fs"));
 const crypto_1 = require("crypto");
+const childProcess = __importStar(require("child_process"));
 const LOG_FILE_PATH = `${__dirname}\\Logs\\`;
 class WrittenLogs {
     constructor(Name) {
@@ -311,7 +312,8 @@ function ShowMenu() {
             yield FindDublicates(clearPath, logs, gatherFiles);
         }
         else if (answer == 2) { // View logfiles
-            Print("Sad ?!:(!?");
+            logs.Append("Opened log folder");
+            childProcess.exec(`start "" "${LOG_FILE_PATH}"`);
         }
         else if (answer == 3) {
             logs.Append("Interface shutdown requested");
