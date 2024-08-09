@@ -49,12 +49,13 @@ class WrittenLogs {
         await this.WaitForReady()
         // Clean up strings that have been modified by me
 
-        Content
+        
+        fs.appendFileSync(this.Path,`\n${Content
             .replace("???!","")
             .replace("??!","")
             .replace("?!","")
             .replace("!?","")
-        fs.appendFileSync(this.Path,`\n${Content}`)
+        }`)
     }
 }
 

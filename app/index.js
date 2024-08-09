@@ -75,12 +75,11 @@ class WrittenLogs {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.WaitForReady();
             // Clean up strings that have been modified by me
-            Content
+            fs_1.default.appendFileSync(this.Path, `\n${Content
                 .replace("???!", "")
                 .replace("??!", "")
                 .replace("?!", "")
-                .replace("!?", "");
-            fs_1.default.appendFileSync(this.Path, `\n${Content}`);
+                .replace("!?", "")}`);
         });
     }
 }
