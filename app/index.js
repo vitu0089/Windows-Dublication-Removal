@@ -310,6 +310,10 @@ function FindDublicates(path, logs, gatherFiles) {
                             yield Wait(1.5);
                             return yield recurse();
                         }
+                        // If input is blank
+                        if (object[1][0].replace(" ", "") == "") {
+                            return;
+                        }
                         for (const i in object[1]) {
                             if (translatedAnswer.has(Number.parseInt(i))) {
                                 continue;

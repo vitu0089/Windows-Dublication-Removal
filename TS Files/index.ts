@@ -321,6 +321,11 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
                     return await recurse()
                 }
 
+                // If input is blank
+                if (object[1][0].replace(" ","") == "") {
+                    return
+                }
+
                 for (const i in object[1]) {
                     if (translatedAnswer.has(Number.parseInt(i))) {
                         continue
