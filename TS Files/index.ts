@@ -208,6 +208,8 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
             .finally(() => {
                 finished++
             })
+
+            await Wait(0.005)
         }
     }
     clear()
@@ -359,6 +361,7 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
                 }
             }
             await recurse()
+            await Wait(0.005)
         }
     }
 

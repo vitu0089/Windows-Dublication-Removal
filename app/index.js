@@ -215,6 +215,7 @@ function FindDublicates(path, logs, gatherFiles) {
                         .finally(() => {
                         finished++;
                     });
+                    yield Wait(0.005);
                 }
             });
         }
@@ -345,6 +346,7 @@ function FindDublicates(path, logs, gatherFiles) {
                     });
                 }
                 yield recurse();
+                yield Wait(0.005);
             }
         }
         clear();
