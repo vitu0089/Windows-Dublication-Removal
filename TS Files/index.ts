@@ -302,6 +302,7 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
                 let answer = (await RequestUser(`\nSelect the files to be spared (Seperate with a comma ",")`)).toString().split(",")
                 let translatedAnswer : Map<number,boolean> = new Map()
                 let hasOnlyNumber = true
+                
                 if (answer[0] != "") {
                     for (const index in answer) {
                         let numberValue = Number.parseInt(answer[index])
@@ -321,13 +322,9 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
                     return await recurse()
                 }
 
-                // If input is blank
-                if (object[1][0].replace(" ","") == "") {
-                    return
-                }
-
                 for (const i in object[1]) {
                     if (translatedAnswer.has(Number.parseInt(i))) {
+                        await Wait(2)
                         continue
                     }
 
@@ -357,9 +354,7 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
 
                     // Rename file
                     let newPath = await Recurse()
-                    fs.renameSync(filePath,newPath)
-
-                    return 
+                    fs.renameSync(filePath,newPath) 
                 }
             }
             await recurse()
