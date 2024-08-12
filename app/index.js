@@ -340,6 +340,7 @@ function FindDublicates(path, logs, gatherFiles) {
                             // Rename file
                             let newPath = yield Recurse();
                             fs_1.default.renameSync(filePath, newPath);
+                            yield Wait(0.005);
                         }
                     });
                 }

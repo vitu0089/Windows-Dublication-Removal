@@ -354,7 +354,8 @@ async function FindDublicates(path : string, logs : WrittenLogs, gatherFiles? : 
 
                     // Rename file
                     let newPath = await Recurse()
-                    fs.renameSync(filePath,newPath) 
+                    fs.renameSync(filePath,newPath)
+                    await Wait(0.005)
                 }
             }
             await recurse()
